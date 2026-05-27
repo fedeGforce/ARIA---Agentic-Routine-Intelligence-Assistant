@@ -13,18 +13,17 @@
 
 import sqlite3
 from pathlib import Path
-from datetime import datetime, date
-from typing import Optional
 
 # The database file lives next to this module.
 # Path(__file__).parent resolves to aria/db/
-DB_PATH    = Path(__file__).parent / "aria.db"
+DB_PATH = Path(__file__).parent / "aria.db"
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
 
 # -------------------------------------------------------------
 # Connection management
 # -------------------------------------------------------------
+
 
 def get_connection() -> sqlite3.Connection:
     """
@@ -61,6 +60,7 @@ def init_db() -> None:
 # PROJECT helpers
 # =============================================================
 
+
 def create_project(name: str, description: str = "", category: str = "general") -> int:
     """
     Insert a new project and return its auto-generated id.
@@ -82,7 +82,7 @@ def create_project(name: str, description: str = "", category: str = "general") 
         return cursor.lastrowid
 
 
-def get_project(project_id: int) -> Optional[sqlite3.Row]:
+def get_project(project_id: int) -> sqlite3.Row | None:
     """
     Fetch a single project by id. Returns None if not found.
     """
@@ -127,13 +127,14 @@ def archive_project(project_id: int) -> bool:
 # TASK helpers
 # =============================================================
 
+
 def create_task(
-    project_id:  int,
-    title:       str,
-    description: str           = "",
-    priority:    Optional[int] = None,   # 1=low, 2=medium, 3=high
-    recurrence:  str           = "none",
-    due_date:    Optional[str] = None,   # 'YYYY-MM-DD' string or None
+    project_id: int,
+    title: str,
+    description: str = "",
+    priority: int | None = None,  # 1=low, 2=medium, 3=high
+    recurrence: str = "none",
+    due_date: str | None = None,  # 'YYYY-MM-DD' string or None
 ) -> int:
     """
     Insert a new task and return its auto-generated id.
@@ -150,7 +151,7 @@ def create_task(
         return cursor.lastrowid
 
 
-def get_task(task_id: int) -> Optional[sqlite3.Row]:
+def get_task(task_id: int) -> sqlite3.Row | None:
     """
     Fetch a single task by id. Returns None if not found.
     Joins project name so callers don't need a second query.
@@ -166,8 +167,8 @@ def get_task(task_id: int) -> Optional[sqlite3.Row]:
 
 
 def list_tasks(
-    project_id: Optional[int] = None,
-    status:     Optional[str] = None,
+    project_id: int | None = None,
+    status: str | None = None,
 ) -> list[sqlite3.Row]:
     """
     Return tasks, optionally filtered by project and/or status.
@@ -175,7 +176,7 @@ def list_tasks(
     Null priorities are sorted last.
     """
     conditions = []
-    params     = []
+    params = []
 
     if project_id is not None:
         conditions.append("t.project_id = ?")
@@ -263,8 +264,8 @@ def get_tasks_for_summary(period: str) -> list[sqlite3.Row]:
     a snapshot of what was worked on in the requested window.
     """
     period_filter = {
-        "day":   "date(t.updated_at) = date('now')",
-        "week":  "t.updated_at >= datetime('now', '-7 days')",
+        "day": "date(t.updated_at) = date('now')",
+        "week": "t.updated_at >= datetime('now', '-7 days')",
         "month": "t.updated_at >= datetime('now', '-30 days')",
     }
 
@@ -286,12 +287,13 @@ def get_tasks_for_summary(period: str) -> list[sqlite3.Row]:
 # AI LOG helpers
 # =============================================================
 
+
 def log_ai_action(
-    action:     str,
-    prompt:     str,
-    response:   str,
-    task_id:    Optional[int] = None,
-    model_used: str           = "phi3.5",
+    action: str,
+    prompt: str,
+    response: str,
+    task_id: int | None = None,
+    model_used: str = "phi3.5",
 ) -> int:
     """
     Record an AI interaction in the audit log.
@@ -310,13 +312,13 @@ def log_ai_action(
         return cursor.lastrowid
 
 
-def get_ai_logs(task_id: Optional[int] = None, action: Optional[str] = None) -> list[sqlite3.Row]:
+def get_ai_logs(task_id: int | None = None, action: str | None = None) -> list[sqlite3.Row]:
     """
     Retrieve AI log entries, optionally filtered by task and/or action type.
     Useful for reviewing what the model has suggested for a specific task.
     """
     conditions = []
-    params     = []
+    params = []
 
     if task_id is not None:
         conditions.append("task_id = ?")

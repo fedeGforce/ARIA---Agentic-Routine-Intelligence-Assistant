@@ -13,19 +13,29 @@
 # =============================================================
 
 import pytest
+
 import db.database as db_module
 from db.database import (
+    archive_project,
+    create_project,
+    create_task,
+    get_ai_logs,
+    get_overdue_tasks,
+    get_project,
+    get_task,
+    get_tasks_for_summary,
     init_db,
-    create_project, get_project, list_projects, archive_project,
-    create_task, get_task, list_tasks, update_task_status,
-    update_task_priority, get_overdue_tasks, get_tasks_for_summary,
-    log_ai_action, get_ai_logs,
+    list_projects,
+    list_tasks,
+    log_ai_action,
+    update_task_priority,
+    update_task_status,
 )
-
 
 # =============================================================
 # FIXTURES
 # =============================================================
+
 
 @pytest.fixture(autouse=True)
 def db(tmp_path, monkeypatch):
@@ -66,7 +76,7 @@ def task_with_priority(project):
         title="Read LangGraph quickstart docs",
         priority=3,
         recurrence="weekly",
-        due_date="2099-05-30",   # Far future — never overdue in tests
+        due_date="2099-05-30",  # Far future — never overdue in tests
     )
 
 
@@ -88,8 +98,8 @@ def overdue_task(project):
 # SCHEMA
 # =============================================================
 
-class TestSchema:
 
+class TestSchema:
     def test_db_file_is_created(self, db):
         """init_db() must create the SQLite file on disk."""
         assert db.exists()
@@ -99,7 +109,7 @@ class TestSchema:
         Calling init_db() a second time must not raise — all
         CREATE statements use IF NOT EXISTS.
         """
-        init_db()   # second call
+        init_db()  # second call
         assert db.exists()
 
 
@@ -107,8 +117,8 @@ class TestSchema:
 # PROJECTS
 # =============================================================
 
-class TestProjects:
 
+class TestProjects:
     def test_create_project_returns_integer_id(self):
         pid = create_project("My Project")
         assert isinstance(pid, int)
@@ -118,18 +128,18 @@ class TestProjects:
         pid = create_project("Minimal Project")
         row = get_project(pid)
         assert row["category"] == "general"
-        assert row["status"]   == "active"
+        assert row["status"] == "active"
 
     def test_create_project_with_all_fields(self):
         pid = create_project("Full Project", description="A description", category="work")
         row = get_project(pid)
-        assert row["name"]        == "Full Project"
+        assert row["name"] == "Full Project"
         assert row["description"] == "A description"
-        assert row["category"]    == "work"
+        assert row["category"] == "work"
 
     def test_get_project_returns_correct_row(self, project):
         row = get_project(project)
-        assert row["id"]   == project
+        assert row["id"] == project
         assert row["name"] == "Learn LangGraph"
 
     def test_get_project_returns_none_for_missing_id(self):
@@ -182,8 +192,8 @@ class TestProjects:
 # TASKS
 # =============================================================
 
-class TestTasks:
 
+class TestTasks:
     def test_create_task_returns_integer_id(self, project):
         tid = create_task(project_id=project, title="My Task")
         assert isinstance(tid, int)
@@ -192,10 +202,10 @@ class TestTasks:
     def test_create_task_defaults(self, project):
         tid = create_task(project_id=project, title="Minimal Task")
         row = get_task(tid)
-        assert row["status"]     == "pending"
+        assert row["status"] == "pending"
         assert row["recurrence"] == "none"
-        assert row["priority"]   is None
-        assert row["due_date"]   is None
+        assert row["priority"] is None
+        assert row["due_date"] is None
 
     def test_create_task_with_all_fields(self, project):
         tid = create_task(
@@ -207,11 +217,11 @@ class TestTasks:
             due_date="2099-12-31",
         )
         row = get_task(tid)
-        assert row["title"]       == "Full Task"
+        assert row["title"] == "Full Task"
         assert row["description"] == "Details here"
-        assert row["priority"]    == 2
-        assert row["recurrence"]  == "weekly"
-        assert row["due_date"]    == "2099-12-31"
+        assert row["priority"] == 2
+        assert row["recurrence"] == "weekly"
+        assert row["due_date"] == "2099-12-31"
 
     def test_get_task_includes_project_name(self, project, task_with_priority):
         row = get_task(task_with_priority)
@@ -241,9 +251,9 @@ class TestTasks:
         High priority (3) tasks must appear before low priority (1).
         Null priorities must appear last.
         """
-        create_task(project_id=project, title="Low",    priority=1)
-        create_task(project_id=project, title="High",   priority=3)
-        create_task(project_id=project, title="No prio")           # priority=None
+        create_task(project_id=project, title="Low", priority=1)
+        create_task(project_id=project, title="High", priority=3)
+        create_task(project_id=project, title="No prio")  # priority=None
 
         tasks = list_tasks(project_id=project)
         priorities = [r["priority"] for r in tasks]
@@ -326,8 +336,8 @@ class TestTasks:
 # AI LOGS
 # =============================================================
 
-class TestAiLogs:
 
+class TestAiLogs:
     def test_log_ai_action_returns_integer_id(self, project):
         log_id = log_ai_action(
             action="suggest",
@@ -360,7 +370,7 @@ class TestAiLogs:
         assert log_id in ids
 
     def test_get_ai_logs_returns_all_when_no_filters(self):
-        log_ai_action(action="warn",      prompt="p1", response="r1")
+        log_ai_action(action="warn", prompt="p1", response="r1")
         log_ai_action(action="summarize", prompt="p2", response="r2")
         logs = get_ai_logs()
         assert len(logs) == 2
@@ -376,7 +386,7 @@ class TestAiLogs:
         assert logs[0]["task_id"] == task_with_priority
 
     def test_get_ai_logs_filters_by_action(self):
-        log_ai_action(action="suggest",  prompt="p", response="r")
+        log_ai_action(action="suggest", prompt="p", response="r")
         log_ai_action(action="summarize", prompt="p", response="r")
 
         suggest_logs = get_ai_logs(action="suggest")
@@ -384,8 +394,8 @@ class TestAiLogs:
         assert len(suggest_logs) == 1
 
     def test_get_ai_logs_filters_by_task_and_action(self, project, task_with_priority):
-        log_ai_action(action="suggest",  prompt="p", response="r", task_id=task_with_priority)
-        log_ai_action(action="warn",     prompt="p", response="r", task_id=task_with_priority)
+        log_ai_action(action="suggest", prompt="p", response="r", task_id=task_with_priority)
+        log_ai_action(action="warn", prompt="p", response="r", task_id=task_with_priority)
 
         logs = get_ai_logs(task_id=task_with_priority, action="suggest")
         assert len(logs) == 1

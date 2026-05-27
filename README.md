@@ -8,7 +8,7 @@ ARIA is not just another task manager with an AI wrapper. It is a true **agentic
 
 Unlike naive AI integrations, ARIA separates reasoning from execution to maintain strict safety:
 * **The Model Proposes:** The AI receives data strictly as text, reasons about it, and returns clean, structured instructions.
-* **The Code Disposes:** The underlying Python application evaluates the AI's proposal, validates it, and writes the changes deterministically to the database. 
+* **The Code Disposes:** The underlying Python application evaluates the AI's proposal, validates it, and writes the changes deterministically to the database.
 
 > **Safety Architecture:** The language model *never* touches the database directly.
 
@@ -90,7 +90,7 @@ python aria.py task parse "I need to review the Docker notes every monday and su
 python aria.py ai suggest          # Suggests priorities for pending tasks
 python aria.py ai warn             # Flags overdue or neglected tasks
 python aria.py ai summarize --period day   # Summarizes by 'day', 'week', or 'month'
-``` 
+```
 
 ## How the AI Fits In (The Agentic Part)
 - Each ai command follows the exact same pattern—this is your first fundamental agent loop:
