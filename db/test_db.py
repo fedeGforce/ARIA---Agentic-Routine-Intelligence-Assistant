@@ -12,7 +12,15 @@
 # no cleanup needed, no test order dependencies.
 # =============================================================
 
+import sys
+from pathlib import Path
+
 import pytest
+
+# Allow direct execution: `python db/test_db.py`
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import db.database as db_module
 from db.database import (

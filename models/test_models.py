@@ -15,10 +15,17 @@
 #   - from_row() works end-to-end with real DB rows
 # =============================================================
 
+import sys
 from datetime import date, datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+
+# Allow direct execution: `python models/test_models.py`
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import db.database as db_module
 from db.database import (
